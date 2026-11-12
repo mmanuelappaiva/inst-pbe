@@ -1,201 +1,245 @@
 <?php
-//configuração
 header("Content-Type: application/json;charset=utf-8");
-//DEFINE A RESPOSTA DA API, NESTE CASO JSON
-
-
-header ("Access-Control-Allow-Origin: *");
-//DEFINE O ACESSO A API, NESSE * QUER DIZER TODAS AS ORIGEM
-
-
-header ("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
-//DEFINE OS MÉTODOS QUE PODEM SER FEITOS NESSA API
-
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
 
 require "config.php";
-
 
 $rota = $_GET["rota"] ?? "";
 $metodo = $_SERVER["REQUEST_METHOD"];
 
-
-//variável para capturar as informações das requisições
 $corpo = json_decode(file_get_contents("php://input"), true) ?? [];
 
-
 function teste(){
-    echo json_encode (["mensagem" => "Back-end respondendo com sucesso!"]);
+    echo json_encode(["mensagem" => "Back-end respondendo com sucesso!"]);
     exit;
 }
+function createUsuario($con, $dados){
+    $stmt = $con->prepare(
+        "INSERT INTO usuarios (nome, username, email, senha)
+        VALUES (?, ?, ?, ?)"
+    );
 
+    $stmt->execute([
+        $dados["nome"],
+        $dados["username"],
+        $dados["email"],
+        $dados["senha"]
+    ]);
 
-
-
-//funções: onde fica o crud
-function createUsuarios($con, $dados){
-    $stmt = $con->prepare("INSERT INTO USUARIOS (NOME, USERNAME, EMAIL, SENHA) VALUES (?,?,?,?)");
-    $stmt -> execute([$dados["nome"], $dados["username"], $dados["email"], $dados["senha"]]);
     http_response_code(201);
-    echo json_encode(["mensagem" => "Usuário criado com sucesso!", "id" => $con->lastInsertId()]);
+
+    echo json_encode([
+        "mensagem" => "Usuário criado com sucesso!",
+        "id" => $con->lastInsertId()
+    ]);
 }
+function readUsuario($con){
+    $stmt = $con->query("SELECT * FROM usuarios");
 
-
-function readUsuarios($con){
-    $stmt = $con->query("SELECT * FROM Usuarios");
     echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
+function updateUsuario($con, $id, $dados){
+    $stmt = $con->prepare(
+        "UPDATE usuarios SET nome = ?, username = ?, email = ?, senha = ?
+        WHERE id_usuario = ?"
+    );
 
+    $stmt->execute([
+        $dados["nome"],
+        $dados["username"],
+        $dados["email"],
+        $dados["senha"],
+        $id
+    ]);
 
-function updateUsuarios($con, $id, $dados){
-    $stmt = $con->prepare("UPDATE Usuarios SET nome = ?, username = ?, email = ?, senha = ? WHERE idUsuario = ?");
-    $stmt -> execute([$dados["nome"], $dados["username"], $dados["email"], $dados["senha"], $id]);
-    echo json_encode(["mensagem" => "Usuário alterado com sucesso!"]);
+    echo json_encode([
+        "mensagem" => "Usuário alterado com sucesso!"
+    ]);
 }
+function deleteUsuario($con, $id){
+    $stmt = $con->prepare(
+        "DELETE FROM usuarios WHERE id_usuario = ?"
+    );
 
+    $stmt->execute([$id]);
 
-function deleteUsuarios ($con, $id){
-    $stmt = $con->prepare("DELETE FROM Usuarios WHERE idUsuarios = ?");
-    $stmt ->execute([$id]);
-    echo json_encode(["mensagem" => "Usuário removido com sucesso!"]);
+    echo json_encode([
+        "mensagem" => "Usuário removido com sucesso!"
+    ]);
 }
+function createPublicacao($con, $dados){
+    $stmt = $con->prepare(
+        "INSERT INTO publicacoes (id_usuario, legenda, imagem_url)
+        VALUES (?, ?, ?)"
+    );
 
+    $stmt->execute([
+        $dados["id_usuario"],
+        $dados["legenda"] ?? null,
+        $dados["imagem_url"] ?? null
+    ]);
 
-function createPublicacoes($con, $dados){
-    $stmt = $con->prepare("INSERT INTO Publicacoes ID_USUARIO, LEGENDA, IMAGEM_URL) VALUES (?,?,?)");
-    $stmt -> execute([$dados["id_usuario"], $dados["legenda"], $dados["imagem_url"]]);
     http_response_code(201);
-    echo json_encode(["mensagem" => "Publicação criada com sucesso!", "id" => $con->lastInsertId()]);
+
+    echo json_encode([
+        "mensagem" => "Publicação criada com sucesso!",
+        "id" => $con->lastInsertId()
+    ]);
 }
+function readPublicacao($con){
+    $stmt = $con->query("SELECT * FROM publicacoes");
 
-
-function readPublicacoes($con){
-    $stmt = $con->query("SELECT * FROM Publicacoes");
     echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
+function updatePublicacao($con, $id, $dados){
+    $stmt = $con->prepare(
+        "UPDATE publicacoes
+        SET id_usuario = ?, legenda = ?, imagem_url = ?
+        WHERE id_publicacao = ?"
+    );
 
+    $stmt->execute([
+        $dados["id_usuario"],
+        $dados["legenda"] ?? null,
+        $dados["imagem_url"] ?? null,
+        $id
+    ]);
 
-function updatePublicacoes($con, $id, $dados){
-    $stmt = $con->prepare("UPDATE Publicacoes SET id_usuario = ?, legenda = ?, imagem_url = ? WHERE idPublicacao = ?");
-    $stmt -> execute([$dados["nome"], $dados["cargo"], $dados["salario"], $id]);
-    echo json_encode(["mensagem" => "Publicação alterada com sucesso!"]);
+    echo json_encode([
+        "mensagem" => "Publicação atualizada com sucesso!"
+    ]);
 }
+function deletePublicacao($con, $id){
+    $stmt = $con->prepare(
+        "DELETE FROM publicacoes WHERE id_publicacao = ?"
+    );
 
+    $stmt->execute([$id]);
 
-function deletePublicacoes ($con, $id){
-    $stmt = $con->prepare("DELETE FROM Publicacoes WHERE idPublicacao = ?");
-    $stmt ->execute([$id]);
-    echo json_encode(["mensagem" => "Publicação removida com sucesso!"]);
+    echo json_encode([
+        "mensagem" => "Publicação removida com sucesso!"
+    ]);
 }
+function createCurtida($con, $dados){
+    $stmt = $con->prepare(
+        "INSERT INTO curtidas (id_usuario, id_publicacao)
+        VALUES (?, ?)"
+    );
 
+    $stmt->execute([
+        $dados["id_usuario"],
+        $dados["id_publicacao"]
+    ]);
 
-function createCurtidas($con, $dados){
-    $stmt = $con->prepare("INSERT INTO Curtidas (id_usuario, id_publicacao) VALUES (?, ?)");
-    $stmt -> execute([$dados["id_usuario"], $dados["id_publicacao"]]);
     http_response_code(201);
-    echo json_encode(["mensagem" => "Curtida criada com sucesso!", "id" => $con->lastInsertId()]);
+
+    echo json_encode([
+        "mensagem" => "Curtida criada com sucesso!",
+        "id" => $con->lastInsertId()
+    ]);
 }
+function readCurtida($con){
+    $stmt = $con->query("SELECT * FROM curtidas");
 
-
-function readCurtidas($con){
-    $stmt = $con->query("SELECT * FROM Curtidas");
     echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
+function updateCurtida($con, $id, $dados){
+    $stmt = $con->prepare(
+        "UPDATE curtidas
+        SET id_usuario = ?, id_publicacao = ?
+        WHERE id_curtida = ?"
+    );
 
+    $stmt->execute([
+        $dados["id_usuario"],
+        $dados["id_publicacao"],
+        $id
+    ]);
 
-function updateCurtidas($con, $id, $dados){
-    $stmt = $con->prepare("UPDATE Curtidas SET id_usuario = ?, id_publicacao = ? WHERE idCurtida = ?");
-    $stmt -> execute([$dados["origem"], $dados["destino"], $dados["distancia"], $id]);
-    echo json_encode(["mensagem" => "Curtida alterada com sucesso!"]);
+    echo json_encode([
+        "mensagem" => "Curtida atualizada com sucesso!"
+    ]);
+}
+function deleteCurtida($con, $id){
+    $stmt = $con->prepare(
+        "DELETE FROM curtidas WHERE id_curtida = ?"
+    );
+
+    $stmt->execute([$id]);
+
+    echo json_encode([
+        "mensagem" => "Curtida removida com sucesso!"
+    ]);
+}
+if ($rota == "usuarios") {
+    switch($metodo){
+        case "POST":
+            createUsuario($con, $corpo);
+            break;
+
+        case "GET":
+            readUsuario($con);
+            break;
+
+        case "PUT":
+            updateUsuario($con, $_GET["id"], $corpo);
+            break;
+
+        case "DELETE":
+            deleteUsuario($con, $_GET["id"]);
+            break;
+
+        default:
+            teste();
+    }
+}
+else if ($rota == "publicacoes") {
+    switch($metodo){
+        case "POST":
+            createPublicacao($con, $corpo);
+            break;
+
+        case "GET":
+            readPublicacao($con);
+            break;
+
+        case "PUT":
+            updatePublicacao($con, $_GET["id"], $corpo);
+            break;
+
+        case "DELETE":
+            deletePublicacao($con, $_GET["id"]);
+            break;
+
+        default:
+            teste();
+    }
+}
+else if ($rota == "curtidas") {
+    switch($metodo){
+        case "POST":
+            createCurtida($con, $corpo);
+            break;
+
+        case "GET":
+            readCurtida($con);
+            break;
+
+        case "PUT":
+            updateCurtida($con, $_GET["id"], $corpo);
+            break;
+
+        case "DELETE":
+            deleteCurtida($con, $_GET["id"]);
+            break;
+
+        default:
+            teste();
+    }
 }
 
-
-function deleteCurtidas ($con, $id){
-    $stmt = $con->prepare("DELETE FROM Curtidas WHERE idCurtida = ?");
-    $stmt ->execute([$id]);
-    echo json_encode(["mensagem" => "Curtida removida com sucesso!"]);
+else {
+    teste();
 }
-
-
-
-
-
-
-// rotas nomeadas
- if ($rota === "usuarios"){
-    switch($metodo){
-        case "POST":
-            createUsuarios($con, $corpo);
-            break;
-        case "GET":
-            readUsuarios($con);
-            break;
-        case "PUT":
-            updateUsuarios($con, $_GET["id"], $corpo);
-            break;
-        case "DELETE":
-            deleteUsuarios($con, $_GET["id"]);
-            break;
-
-
-        default:
-        teste();
-    }
- }
-
-
- else if ($rota=== "publicacoes"){
-    switch($metodo){
-        case "POST":
-            createPublicacoes($con, $corpo);
-            break;
-
-
-        case "GET":
-            readPublicacoes($con);
-            break;
-
-
-        case "PUT":
-            updatePublicacoes($con, $_GET["id"], $corpo);
-            break;
-
-
-        case "DELETE":
-            deletePublicacoes($con, $_GET["id"]);
-            break;
-
-
-        default:
-        teste();
-    }
-
-
- }
-
-
-else if ($rota=== "curtidas"){
-    switch($metodo){
-        case "POST":
-            createCurtidas($con, $corpo);
-            break;
-
-
-        case "GET":
-            readCurtidas($con);
-            break;
-
-
-        case "PUT":
-            updateCurtidas($con, $_GET["id"], $corpo);
-            break;
-
-
-        case "DELETE":
-            deleteCurtidas($con, $_GET["id"]);
-            break;
-
-
-        default:
-        teste();
-    }
- }
+?>
